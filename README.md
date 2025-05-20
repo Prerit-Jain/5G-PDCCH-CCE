@@ -10,3 +10,4 @@ Supports-
 Prerequisites
 -------------
 -- System with Graphical interface
+- Install Python
