@@ -17,8 +17,8 @@ cs_id = 1
 ue_id = 17021
 mu = 0
 #slot =5
-box_width = 40
-box_height = 40
+box_width = 45
+box_height = 45
 pci = 26
 nCI = 0
 
@@ -32,16 +32,18 @@ rbMap = {
 }
 
 class TestCase:
-    def __init__(self,aggrLvl, ue_id, cs1, slot,coreSet0_aggrLvl, numCce, numCceRedCapUe, coreSet0_numCce,cceStart):
+    def __init__(self,aggrLvl, ue_id, cs1, slot,coreSet0_aggrLvl, numCce, numCceRedCapUe, coreSet0_numCce,rbStart,rbCnt,symbol_cnt):
         self.aggrLvl = aggrLvl
         self.numCce = numCce
         self.numCceRedCapUe = numCceRedCapUe
         self.coreSet0_numCce = coreSet0_numCce
-        self.cceStart = cceStart
+        self.rbStart = rbStart
         self.coreSet0_aggrLvl = coreSet0_aggrLvl
         self.ue_id= ue_id
         self.cs1 = cs1
         self.slot = slot
+        self.rbCnt = rbCnt
+        self.symbol_cnt = symbol_cnt
 
 
 def generate_random_ue_id():
@@ -97,16 +99,32 @@ def getInterLeavedCs(cceIdx,cce2RegBndlMapIntrLvd):
 
 def draw_coreset(canvas, test_case, colors, x_offset, y_offset, num_cce, label):
     boxes = []
-    canvas.create_text(10, y_offset, text=label, anchor=tk.NW, font=("Helvetica", 12, "bold"))
+    canvas.create_text(10, y_offset, text=label, anchor=tk.NW, font=("Helvetica", 10, "bold"))
     for i in range(num_cce):
-        x = i * box_width + x_offset * box_width+ 110
+        x = i * box_width*2/test_case.symbol_cnt + x_offset * (box_width/3)+ 110
         if i==0:
             y =y_offset - 15
             canvas.create_text(x, y, text=f"cceStart-{x_offset}", anchor=tk.NW)
         y = y_offset
-        box = canvas.create_rectangle(x, y, x + box_width, y + box_height, fill="#FFFFFF")
+        box = canvas.create_rectangle(x, y, x + box_width*2/test_case.symbol_cnt, y + box_height, fill="#FFFFFF")
         boxes.append(box)
         canvas.create_text(x + 20, y + 20, text=str(i))
+    return boxes
+
+def draw_rb(canvas, numRb):
+    boxes = []
+    rb_width = box_width/3
+    rb_height = box_height
+    y = 10
+    canvas.create_text(10, y+2, text="RB", anchor=tk.NW, font=("Helvetica", 10, "bold"))
+    for i in range(numRb):
+        x = i * rb_width + 110     
+        box = canvas.create_rectangle(x, y, x + rb_width, y + rb_height, fill="#FFFFFF")
+        boxes.append(box)
+        if i > 99:
+            canvas.create_text(x + 6, y + 20, text="\n".join(str(i)))
+        else:
+            canvas.create_text(x + 6, y + 20, text=str(i))
     return boxes
 
 def create_boxes(test_case):
@@ -122,7 +140,8 @@ def create_boxes(test_case):
     print("Cs1 string", test_case.cs1)
  #Coreset 0 
     SCHCfgInterLeavedCs(test_case.coreSet0_numCce, cce2RegBndlMapIntrLvd,pci)
-    boxes = draw_coreset(canvas, test_case, colors, test_case.cceStart, 50, test_case.coreSet0_numCce , "Coreset0")
+    draw_rb(canvas, test_case.rbCnt)
+    boxes = draw_coreset(canvas, test_case, colors, test_case.rbStart, 80, test_case.coreSet0_numCce , "Coreset0")
     if (test_case.coreSet0_aggrLvl == 8):
         numCandidts = 2
     elif (test_case.coreSet0_aggrLvl == 4):
@@ -174,7 +193,7 @@ def create_boxes(test_case):
             # Normal UE
             shiftIdx = (pci + test_case.cceStart) % test_case.numCce
             SCHCfgInterLeavedCs(test_case.numCce,cce2RegBndlMapIntrLvd,shiftIdx)
-            boxes = draw_coreset(canvas, test_case, colors,0, seq  * box_height+ 3*box_height, test_case.numCce,  f"Coreset1\n RNTI-{test_case.ue_id+2*seq}")               
+            boxes = draw_coreset(canvas, test_case, colors,0, seq  * box_height+ 3.5*box_height, test_case.numCce,  f"Coreset1\n RNTI-{test_case.ue_id+2*seq}")               
             print("UeIdx, shiftIdx", test_case.ue_id, shiftIdx) 
             for i in range(numCandidts):
                 csLoc = int((y_val + ((i * test_case.numCce) // (test_case.aggrLvl * numCandidts)) + nCI) % (test_case.numCce // test_case.aggrLvl))
@@ -189,7 +208,7 @@ def create_boxes(test_case):
                  
         else:
             # Normal UE
-            boxes = draw_coreset(canvas, test_case, colors,0, seq * box_height+ 3*box_height, test_case.numCce, f"Coreset1\n RNTI-{test_case.ue_id+2*seq}") 
+            boxes = draw_coreset(canvas, test_case, colors,0, seq * box_height+ 3.5*box_height, test_case.numCce, f"Coreset1\n RNTI-{test_case.ue_id+2*seq}") 
             for i in range(numCandidts):
                 csLoc = int((y_val + ((i * test_case.numCce) // (test_case.aggrLvl * numCandidts)) + nCI) % (test_case.numCce // test_case.aggrLvl))
                 startCceIdx = csLoc * test_case.aggrLvl
@@ -207,7 +226,7 @@ def create_boxes(test_case):
 
 
 
-def execute_test_case(test_case_var, aggregation_var,ue_id_entry,cs1_var,slot_var,coreSet0_aggrLvl_var,pdcch_symbol_entry, start_rb_entry):
+def execute_test_case(test_case_var, aggregation_var,ue_id_entry,cs1_var,slot_var,coreSet0_aggrLvl_var,pdcch_symbol_entry, start_rb_entry, coreset0_rb_entry):
     test_case_name = test_case_var.get()
     aggregation_level = int(aggregation_var.get())
     ue_id_text = ue_id_entry.get()
@@ -221,6 +240,7 @@ def execute_test_case(test_case_var, aggregation_var,ue_id_entry,cs1_var,slot_va
     coreSet0_aggrLvl = int(coreSet0_aggrLvl_var.get())
     start_rb = int(start_rb_entry.get())
     pdcch_symbol_count = int(pdcch_symbol_entry.get())
+    coreset0_rb_count = int(coreset0_rb_entry.get())
 
     # Validate UeId
     try:
@@ -232,20 +252,21 @@ def execute_test_case(test_case_var, aggregation_var,ue_id_entry,cs1_var,slot_va
         print("Invalid UeId. It must be an integer.")
         return
     cceCnt = int ((rbMap[test_case_name] * pdcch_symbol_count)/SCH_NUM_REG_IN_ONE_CCE)
-    print("cceCnt", cceCnt)
+    coreset0_cceCnt = int ((coreset0_rb_count * pdcch_symbol_count)/SCH_NUM_REG_IN_ONE_CCE)
+    print("cceCnt, coreset0_cceCnt", cceCnt, coreset0_cceCnt)
     cceStart = int((start_rb * pdcch_symbol_count)/SCH_NUM_REG_IN_ONE_CCE)
     if test_case_name == "5MHz":
-        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 0, 8, cceStart)
+        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 0, coreset0_cceCnt, start_rb,rbMap[test_case_name],pdcch_symbol_count)
     elif test_case_name == "10MHz":
-        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 8, 16, cceStart)
+        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 8, coreset0_cceCnt, start_rb,rbMap[test_case_name],pdcch_symbol_count)
     elif test_case_name == "15MHz":
-        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 8, 16, cceStart)
+        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 8, coreset0_cceCnt, start_rb,rbMap[test_case_name],pdcch_symbol_count)
     elif test_case_name == "20MHz":
-        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 8, 16, cceStart)
+        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 8, coreset0_cceCnt, start_rb,rbMap[test_case_name],pdcch_symbol_count)
     elif test_case_name == "25MHz":
-        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 16, 16, cceStart)
+        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 16, coreset0_cceCnt, start_rb,rbMap[test_case_name],pdcch_symbol_count)
     elif test_case_name == "100MHz":
-        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 16, 16, cceStart)
+        test_case = TestCase(aggregation_level, ue_id, cs1_type_str,slot,coreSet0_aggrLvl,cceCnt, 16, coreset0_cceCnt, start_rb,rbMap[test_case_name],pdcch_symbol_count)
     else:
         print("Invalid test case name")
 
@@ -318,24 +339,31 @@ start_rb_entry = tk.Entry(input_frame)
 start_rb_entry.insert(0, "0")  # Set default value to 0
 start_rb_entry.grid(row=2, column=3, padx=5, pady=5)
 
+label_coreset0_rb = tk.Label(input_frame, text="Coreset0 RbCount:")
+label_coreset0_rb.grid(row=3, column=2, sticky="w", padx=5, pady=5)
+
+coreset0_rb_entry = tk.Entry(input_frame)
+coreset0_rb_entry.insert(0, "48")  # Set default value to 0
+coreset0_rb_entry.grid(row=3, column=3, padx=5, pady=5)
+
 label_ue_id = tk.Label(input_frame, text="Enter UeId (or leave empty for random):")
-label_ue_id.grid(row=3, column=2, sticky="w", padx=5, pady=5)
+label_ue_id.grid(row=4, column=0, sticky="w", padx=5, pady=5)
 
 ue_id_entry = tk.Entry(input_frame)
-ue_id_entry.grid(row=3, column=3, padx=5, pady=5)
+ue_id_entry.grid(row=4, column=1, padx=5, pady=5)
 
 # Button to generate random UeId
 random_ue_id_button = tk.Button(input_frame, text="Generate Random UeId", command=lambda: generate_random_ue_id())
-random_ue_id_button.grid(row=4, column=3, padx=5, pady=5)
+random_ue_id_button.grid(row=4, column=2, padx=5, pady=5)
 
 # Execute button
 execute_button = tk.Button(
     input_frame,
     text="RUN",
     command=lambda: execute_test_case(
-        test_case_var, aggregation_var, ue_id_entry, cs1_var, slot_var, coreSet0_aggrLvl_var,pdcch_symbol_entry, start_rb_entry
+        test_case_var, aggregation_var, ue_id_entry, cs1_var, slot_var, coreSet0_aggrLvl_var,pdcch_symbol_entry, start_rb_entry, coreset0_rb_entry
     ),
-    bg="blue",  # Highlight background color
+    bg="grey",  # Highlight background color
     fg="white",  # Highlight text color
     font=("Helvetica", 12, "bold")  # Bold font for emphasis
 )
