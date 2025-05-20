@@ -91,7 +91,7 @@ def SCHCfgInterLeavedCs(numCce,cce2RegBndlMapIntrLvd, shiftIdx):
         for r in range(R):
             x = c * R + r
             fInterleaverx = ((r * C) + c + nShift) % (numRegCs // L)
-            print(f"SCHCfgInterLeavedCs: nShift = {nShift}, numRegCs = {numRegCs}, L = {L}, R = {R}, C = {C}, c = {c}, r = {r}, x = {x}, Interleaver output = {fInterleaverx}")
+            #print(f"SCHCfgInterLeavedCs: nShift = {nShift}, numRegCs = {numRegCs}, L = {L}, R = {R}, C = {C}, c = {c}, r = {r}, x = {x}, Interleaver output = {fInterleaverx}")
             cce2RegBndlMapIntrLvd[x] = int(fInterleaverx)
 
 def getInterLeavedCs(cceIdx,cce2RegBndlMapIntrLvd):
@@ -104,7 +104,7 @@ def draw_coreset(canvas, test_case, colors, x_offset, y_offset, num_cce, label):
         x = i * box_width*2/test_case.symbol_cnt + x_offset * (box_width/3)+ 110
         if i==0:
             y =y_offset - 15
-            canvas.create_text(x, y, text=f"cceStart-{x_offset}", anchor=tk.NW)
+            canvas.create_text(x, y, text=f"startRb-{x_offset}", anchor=tk.NW)
         y = y_offset
         box = canvas.create_rectangle(x, y, x + box_width*2/test_case.symbol_cnt, y + box_height, fill="#FFFFFF")
         boxes.append(box)
@@ -137,7 +137,7 @@ def create_boxes(test_case):
     canvas.delete("all")
     # Create the boxes
   #  canvas.create_text(160, 10, text=f"Coreset0", anchor=tk.NW)
-    print("Cs1 string", test_case.cs1)
+
  #Coreset 0 
     SCHCfgInterLeavedCs(test_case.coreSet0_numCce, cce2RegBndlMapIntrLvd,pci)
     draw_rb(canvas, test_case.rbCnt)
@@ -203,7 +203,7 @@ def create_boxes(test_case):
                 # Color the boxes starting from csLoc
                 for j in range(startCceIdx, (startCceIdx + test_case.aggrLvl)):
                     mappedCsLoc = cce2RegBndlMapIntrLvd[j]
-                    print("i,j,mappedCsLoc",i,j,mappedCsLoc)
+                    #print("i,j,mappedCsLoc",i,j,mappedCsLoc)
                     canvas.itemconfig(boxes[mappedCsLoc], fill=colors[i % len(colors)])
                  
         else:
@@ -212,12 +212,10 @@ def create_boxes(test_case):
             for i in range(numCandidts):
                 csLoc = int((y_val + ((i * test_case.numCce) // (test_case.aggrLvl * numCandidts)) + nCI) % (test_case.numCce // test_case.aggrLvl))
                 startCceIdx = csLoc * test_case.aggrLvl
-                #mappedCsLoc = cce2RegBndlMapIntrLvd[startCceIdx]
                 mappedCsLoc = startCceIdx
                 print("y,csLoc,startCceIdx,mappedCsLoc",y_val,csLoc,startCceIdx,mappedCsLoc)
                 # Color the boxes starting from csLoc
                 for j in range(startCceIdx, startCceIdx + test_case.aggrLvl):
-                    #mappedCsLoc = cce2RegBndlMapIntrLvd[j]
                     mappedCsLoc = j
                     #print("i,j,mappedCsLoc",i,j,mappedCsLoc)
                     canvas.itemconfig(boxes[mappedCsLoc], fill=colors[i % len(colors)])
@@ -235,7 +233,7 @@ def execute_test_case(test_case_var, aggregation_var,ue_id_entry,cs1_var,slot_va
         cs1_type = 1
     elif (cs1_type_str == "Non-Interleaved"):
         cs1_type = 0
-    print("cs1_type",cs1_type)
+  
     slot = int(slot_var.get())
     coreSet0_aggrLvl = int(coreSet0_aggrLvl_var.get())
     start_rb = int(start_rb_entry.get())
