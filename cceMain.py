@@ -179,7 +179,7 @@ def create_boxes(test_case):
         y_value_redcap = sch_lvl1_utl_upd_y(cs_id, test_case.ue_id+1+ seq, mu)
         y_val_redcap = y_value_redcap[test_case.slot]
         print("Normal UeIdx,y_val,slot", test_case.ue_id,y_val,test_case.slot)
-        cceStart = int((test_case.rbStart * test_case.symbol_cnt)/SCH_NUM_REG_IN_ONE_CCE
+        cceStart = int(test_case.rbStart * test_case.symbol_cnt)/SCH_NUM_REG_IN_ONE_CCE
       #  cce2RegBndlMapIntrLvd = [0] * test_case.numCce
         cce2RegBndlMapIntrLvd = [0] * 100
         if (test_case.aggrLvl == 8):
